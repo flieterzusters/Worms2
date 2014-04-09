@@ -1,7 +1,7 @@
 package worms.gui.game.commands;
 
-import worms.IFacade;
 import worms.gui.game.PlayGameScreen;
+import worms.model.IFacade;
 
 public abstract class InstantaneousCommand extends Command {
 	protected InstantaneousCommand(IFacade facade, PlayGameScreen screen) {
@@ -9,8 +9,14 @@ public abstract class InstantaneousCommand extends Command {
 	}
 
 	@Override
-	protected final boolean isDoneExecuting() {
+	protected final boolean isExecutionCompleted() {
 		return true;
+	}
+	
+	@Override
+	protected void afterExecutionStarted() {
+		afterExecutionCompleted();
+		getScreen().updateSprites();
 	}
 
 	@Override
