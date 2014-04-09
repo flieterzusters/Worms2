@@ -20,8 +20,6 @@ public class Worms {
 			} else if ("-seed".equals(arg)) {
 				long randomSeed = Long.parseLong(args[++i]);
 				options.randomSeed = randomSeed;
-			} else if ("-clickselect".equals(arg)) {
-				options.enableClickToSelect = true;
 			}
 		}
 

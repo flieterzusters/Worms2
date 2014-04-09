@@ -1,24 +1,15 @@
 package worms.gui.game.sprites;
 
+import worms.Worm;
 import worms.gui.GUIUtils;
-import worms.gui.game.ImageSprite;
-import worms.gui.game.PlayGameScreen;
-import worms.model.Worm;
 
-public class WormSprite extends ImageSprite<Worm> {
+public class WormSprite extends ImageSprite {
 
-	private static final double MAX_SCALE = 100;
-	private static final double MIN_SCALE = 0.05;
 	private final Worm worm;
 
-	public WormSprite(PlayGameScreen screen, Worm worm) {
-		super(screen, "images/worm.png");
+	public WormSprite(Worm worm) {
+		super("images/worm.png");
 		this.worm = worm;
-	}
-
-	@Override
-	public Worm getObject() {
-		return getWorm();
 	}
 
 	public Worm getWorm() {
@@ -44,8 +35,7 @@ public class WormSprite extends ImageSprite<Worm> {
 		 * Height of the image (when drawn at native size) in worm-meters, given
 		 * the scale at which the world is drawn to screen
 		 */
-		double imageHeightInMeters = getScreen().screenToWorldDistance(
-				getImageHeight());
+		double imageHeightInMeters = GUIUtils.pixelToMeter(getImageHeight());
 
 		/*
 		 * scale factor to nicely fit the image in a circle with diameter equal
@@ -56,29 +46,8 @@ public class WormSprite extends ImageSprite<Worm> {
 		double scaleFactor = fitFactor * 2 * radius / imageHeightInMeters;
 
 		// limit scaling
-		scaleFactor = Math.max(MIN_SCALE, Math.min(scaleFactor, MAX_SCALE));
-
+		scaleFactor = Math.max(0.1, Math.min(scaleFactor, 100));
+		
 		setScale(scaleFactor);
-	}
-
-	public boolean hitTest(double screenX, double screenY) {
-		double radius = getScale()
-				* Math.max(getImageWidth(), getImageHeight()) / 2.0;
-		double dx = screenX - getCenterX();
-		double dy = screenY - getCenterY();
-		return dx * dx + dy * dy <= radius * radius;
-	}
-
-	@Override
-	public boolean isObjectAlive() {
-		return getFacade().isAlive(getWorm());
-	}
-
-	@Override
-	public void update() {
-		// don't update the location here, because it may differ from the
-		// location in the model
-		setRadius(getFacade().getRadius(getWorm()));
-		setDirection(getFacade().getOrientation(getWorm()));
 	}
 }

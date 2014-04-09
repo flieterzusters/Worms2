@@ -1,19 +1,14 @@
 package worms.gui.game.commands;
 
-import worms.gui.GUIConstants;
+import worms.IFacade;
+import worms.Worm;
 import worms.gui.game.PlayGameScreen;
-import worms.gui.game.Sprite;
 import worms.gui.game.sprites.WormSprite;
-import worms.gui.messages.MessageType;
-import worms.model.IFacade;
 import worms.model.ModelException;
-import worms.model.Worm;
 
 public class Jump extends Command {
-	private boolean finished = false;
-	private boolean hasJumped;
 	private final Worm worm;
-	private double jumpDuration;
+	private boolean finished = false;
 
 	public Jump(IFacade facade, Worm worm, PlayGameScreen screen) {
 		super(facade, screen);
@@ -24,62 +19,52 @@ public class Jump extends Command {
 		return worm;
 	}
 
-	protected Sprite<Worm> getSprite() {
-		return getScreen().getWormSprite(worm);
-	}
-
 	@Override
-	protected boolean canStart() {
-		return getWorm() != null;
+	protected boolean canExecute() {
+		return worm != null;
 	}
 
 	@Override
 	protected void doStartExecution() {
-		try {
-			this.jumpDuration = getFacade().getJumpTime(worm,
-					GUIConstants.JUMP_TIME_STEP);
-		} catch (ModelException e) {
-			cancelExecution();
-		}
+
+	}
+	
+	@Override
+	protected void executionCancelled() {
+		getScreen().addMessage("This worm cannot jump :(");
 	}
 
-	@Override
-	protected void afterExecutionCancelled() {
-		finished = true;
-		getScreen().addMessage("This worm cannot jump :(", MessageType.ERROR);
+	private double getTotalDuration() {
+		return getFacade().getJumpTime(getWorm());
 	}
 
 	@Override
 	protected void doUpdate(double dt) {
 		WormSprite sprite = getScreen().getWormSprite(getWorm());
+
 		try {
-			if (getElapsedTime() >= jumpDuration) {
-				if (!hasJumped) {
-					hasJumped = true;
-					getFacade().jump(getWorm(), GUIConstants.JUMP_TIME_STEP);
-					if (getFacade().isAlive(getWorm())) {
-						double x = getFacade().getX(getWorm());
-						double y = getFacade().getY(getWorm());
-						sprite.setCenterLocation(getScreen().getScreenX(x),
-								getScreen().getScreenY(y));
-					}
-					finished = true;
-				}
+			if (getElapsedTime() >= getTotalDuration()) {
+				getFacade().jump(worm);
+				finished = true;
+				double x = getScreen().getScreenX(getFacade().getX(getWorm()));
+				double y = getScreen().getScreenY(getFacade().getY(getWorm()));
+
+				sprite.setCenterLocation(x, y);
 			} else {
 				double[] xy = getFacade().getJumpStep(getWorm(),
 						getElapsedTime());
+
 				sprite.setCenterLocation(getScreen().getScreenX(xy[0]),
 						getScreen().getScreenY(xy[1]));
 			}
 		} catch (ModelException e) {
-			e.printStackTrace();
-			afterExecutionCancelled();
+			finished = true;
+			executionCancelled();
 		}
 	}
 
 	@Override
-	protected boolean isExecutionCompleted() {
+	protected boolean isDoneExecuting() {
 		return finished;
 	}
-
 }

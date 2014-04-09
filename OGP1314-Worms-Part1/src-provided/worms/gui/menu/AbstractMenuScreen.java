@@ -3,11 +3,11 @@ package worms.gui.menu;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.event.KeyEvent;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import worms.gui.GUIUtils;
-import worms.gui.InputMode;
 import worms.gui.Screen;
 import worms.gui.WormsGUI;
 
@@ -23,34 +23,45 @@ public abstract class AbstractMenuScreen<Choice> extends Screen {
 			Font.PLAIN, (CHOICE_HEIGHT * 5) / 6);
 	private static final Color SELECTED_CHOICE_COLOR = Color.YELLOW;
 
-	final Choice[] choices;
+	private final Choice[] choices;
 
-	BlockingQueue<Choice> selection = new ArrayBlockingQueue<Choice>(1);
-	int selectedIndex = 0;
+	private BlockingQueue<Choice> selection = new ArrayBlockingQueue<Choice>(1);
+	private int selectedIndex = 0;
 
 	public AbstractMenuScreen(WormsGUI gui) {
 		super(gui);
 		this.choices = getChoices();
 	}
 
-	public void selectNext() {
-		selectedIndex = (selectedIndex + 1) % choices.length;
-		repaint();
-	}
+	protected class DefaultInputMode extends Screen.InputMode {
 
-	public void selectPrevious() {
-		selectedIndex = (selectedIndex + choices.length - 1) % choices.length;
-		repaint();
-	}
+		@Override
+		public void keyReleased(KeyEvent e) {
 
-	public void selectCurrent() {
-		if (selection.isEmpty())
-			selection.add(choices[selectedIndex]);
+			switch (e.getKeyCode()) {
+			case KeyEvent.VK_ESCAPE:
+				getGUI().exit();
+				break;
+			case KeyEvent.VK_DOWN:
+				selectedIndex = (selectedIndex + 1) % choices.length;
+				repaint();
+				break;
+			case KeyEvent.VK_UP:
+				selectedIndex = (selectedIndex + choices.length - 1)
+						% choices.length;
+				repaint();
+				break;
+			case KeyEvent.VK_ENTER:
+				if (selection.isEmpty())
+					selection.add(choices[selectedIndex]);
+				break;
+			}
+		}
 	}
 
 	@Override
-	protected InputMode<? extends AbstractMenuScreen<Choice>> createDefaultInputMode() {
-		return new MenuInputMode<AbstractMenuScreen<Choice>, Choice>(this, null);
+	protected InputMode createDefaultInputMode() {
+		return new DefaultInputMode();
 	}
 
 	protected abstract Choice[] getChoices();
@@ -93,7 +104,8 @@ public abstract class AbstractMenuScreen<Choice> extends Screen {
 				g.setFont(DEFAULT_CHOICE_FONT);
 			}
 			GUIUtils.drawCenteredString(g, str, getScreenWidth(),
-					INSTRUCTIONS_AREA_HEIGHT + CHOICE_HEIGHT * (index - start));
+					INSTRUCTIONS_AREA_HEIGHT + CHOICE_HEIGHT
+							* (index - start));
 		}
 		if (lastChoiceToDisplay < choices.length) {
 			g.setFont(DEFAULT_CHOICE_FONT);
